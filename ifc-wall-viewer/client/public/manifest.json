@@ -1,0 +1,37 @@
+{
+  "name": "ObjetivaAR - Visor BIM 3D",
+  "short_name": "ObjetivaAR",
+  "description": "Visor 3D de modelos BIM para obra. Funciona offline.",
+  "start_url": "/",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#0D3B4F",
+  "theme_color": "#0D3B4F",
+  "icons": [
+    {
+      "src": "/oar-icon-32.png",
+      "sizes": "32x32",
+      "type": "image/png"
+    },
+    {
+      "src": "/apple-touch-icon.png",
+      "sizes": "180x180",
+      "type": "image/png"
+    },
+    {
+      "src": "/oar-icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/oar-icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "categories": ["business", "productivity"],
+  "lang": "es",
+  "dir": "ltr"
+}
