@@ -39,6 +39,22 @@ producción deben venir de variables de entorno / gestor de secretos.
 5. **Reposicionar** sin destruir el modelo (re-escaneo instantáneo).
 6. **Fallback robusto** si el dispositivo no soporta hit-test.
 
+## Despliegue / "corre perfecto"
+
+1. **SessionStart hook** (`.claude/`): instala dependencias automáticamente
+   en sesiones web, entorno reproducible sin pasos manuales.
+2. **`.env.example`**: documenta todas las variables requeridas (sin
+   secretos) para desplegar en Manus u otro host sin filtrar credenciales.
+3. **Preconnect al CDN de Draco** (`www.gstatic.com`): la primera descarga
+   del decodificador WASM arranca sin lag de DNS/TLS → modelos grandes
+   empiezan a procesarse antes.
+4. **Pantalla de carga con marca** (logo + paleta Objetiva) en vez de un
+   spinner genérico.
+5. Sobre AWS/Firebase: **no conviene migrar** — S3+CloudFront es lo
+   correcto para BIM pesado; el problema es tamaño/entrega, no el
+   proveedor. Única alternativa con beneficio real (costo de egreso):
+   Cloudflare R2 + CDN.
+
 ## Verificación
 
 - `tsc --noEmit` (typecheck): **OK**

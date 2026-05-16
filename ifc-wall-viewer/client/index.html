@@ -7,6 +7,7 @@
       name="viewport"
       content="width=device-width, initial-scale=1.0, maximum-scale=1" />
     <title>ObjetivaAR</title>
+    <meta name="description" content="ObjetivaAR — visor BIM 3D y realidad aumentada para verificación de obra: estructura, arquitectura e instalaciones MEP a escala 1:1 en sitio." />
     <link rel="icon" type="image/x-icon" href="/favicon.ico" />
     <link rel="icon" type="image/png" sizes="32x32" href="/oar-icon-32.png" />
     <link rel="icon" type="image/png" sizes="192x192" href="/oar-icon-192.png" />
@@ -19,6 +20,10 @@
     <meta name="apple-mobile-web-app-title" content="ObjetivaAR" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <!-- Draco WASM decoder CDN: connect early so the first heavy model
+         (Eléctrico/Hidráulico) starts decoding without DNS/TLS lag. -->
+    <link rel="preconnect" href="https://www.gstatic.com" crossorigin />
+    <link rel="dns-prefetch" href="https://www.gstatic.com" />
     <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
   </head>
 
