@@ -86,10 +86,39 @@ ctx.onmessage = async (e: MessageEvent) => {
       prepared.push(bake(m.geometry, m.matrixWorld, allHaveNormals));
     }
 
+    // Spatial bucketing: group geometry by XZ region instead of arbitrary
+    // order. Each merged mesh then occupies a compact volume, so Three.js
+    // frustum-culls whole off-screen regions — a big GPU win when walking
+    // inside the model or in AR (most of the building is behind you).
+    const sceneBox = new THREE.Box3();
+    const centroids: THREE.Vector3[] = [];
+    let totalVerts = 0;
+    for (const g of prepared) {
+      g.computeBoundingBox();
+      const bb = g.boundingBox as THREE.Box3;
+      centroids.push(bb.getCenter(new THREE.Vector3()));
+      sceneBox.union(bb);
+      totalVerts += g.getAttribute("position").count;
+    }
+    const size = sceneBox.getSize(new THREE.Vector3());
+    const targetCells = Math.min(64, Math.max(1, Math.round(totalVerts / 1_500_000)));
+    const div = Math.max(1, Math.min(12, Math.round(Math.sqrt(targetCells))));
+    const cellX = size.x > 0 ? size.x / div : 1;
+    const cellZ = size.z > 0 ? size.z / div : 1;
+
+    const cells = new Map<string, THREE.BufferGeometry[]>();
+    for (let i = 0; i < prepared.length; i++) {
+      const c = centroids[i];
+      const ix = Math.floor((c.x - sceneBox.min.x) / cellX);
+      const iz = Math.floor((c.z - sceneBox.min.z) / cellZ);
+      const key = `${ix}:${iz}`;
+      let arr = cells.get(key);
+      if (!arr) { arr = []; cells.set(key, arr); }
+      arr.push(prepared[i]);
+    }
+
     const mergedPayloads: GeoPayload[] = [];
-    let batch: THREE.BufferGeometry[] = [];
-    let verts = 0;
-    const flush = () => {
+    const emit = (batch: THREE.BufferGeometry[]) => {
       if (batch.length === 0) return;
       try {
         const merged = mergeGeometries(batch, false);
@@ -100,16 +129,24 @@ ctx.onmessage = async (e: MessageEvent) => {
       } catch {
         for (const g of batch) mergedPayloads.push(geoToPayload(g));
       }
-      batch = [];
-      verts = 0;
     };
-    for (const g of prepared) {
-      const c = g.getAttribute("position").count;
-      if (verts + c > MAX_VERTS_PER_MERGE && batch.length > 0) flush();
-      batch.push(g);
-      verts += c;
+    const buckets = Array.from(cells.values());
+    for (const arr of buckets) {
+      // Keep each merged buffer under the GPU vertex cap.
+      let batch: THREE.BufferGeometry[] = [];
+      let verts = 0;
+      for (const g of arr) {
+        const c = g.getAttribute("position").count;
+        if (verts + c > MAX_VERTS_PER_MERGE && batch.length > 0) {
+          emit(batch);
+          batch = [];
+          verts = 0;
+        }
+        batch.push(g);
+        verts += c;
+      }
+      emit(batch);
     }
-    flush();
 
     const imPayloads: IMPayload[] = [];
     for (const im of instanced) {

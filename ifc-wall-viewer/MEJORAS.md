@@ -17,16 +17,21 @@ producción deben venir de variables de entorno / gestor de secretos.
    cargar esos modelos. Solo se transfieren arrays compactos de vuelta.
    Si el worker falla por cualquier razón, cae automáticamente al método
    anterior (sin regresiones).
-2. **Resolución adaptativa**: si el framerate cae en escenas pesadas o
+2. **Fusión por regiones espaciales**: la geometría de los modelos
+   grandes se agrupa por zonas (rejilla XZ) en vez de en bloques
+   arbitrarios. Three.js descarta por frustum las regiones fuera de
+   cámara → mucho menos GPU al caminar dentro del modelo o en AR (la
+   mayor parte del edificio queda fuera de vista).
+3. **Resolución adaptativa**: si el framerate cae en escenas pesadas o
    GPUs débiles, baja la densidad de píxeles para mantener fluidez y la
    restaura cuando se estabiliza (con histéresis, sin parpadeo).
-3. **Arranque ~65% más liviano**: rutas `lazy` + chunks de vendor
+4. **Arranque ~65% más liviano**: rutas `lazy` + chunks de vendor
    separados. La carga inicial bajó de 424 KB a ~147 KB gzip; Three.js
    (196 KB gzip) y el visor se cargan solo al abrir un proyecto.
-4. **Draco en WASM + pool de workers** (antes JS, 3-5x más lento).
-5. **Sin recálculo redundante de normales** sobre la geometría fusionada
+5. **Draco en WASM + pool de workers** (antes JS, 3-5x más lento).
+6. **Sin recálculo redundante de normales** sobre la geometría fusionada
    (millones de vértices) — era una causa principal del "no responde".
-6. **Tone mapping ACES Filmic**: imagen más realista, sin costo de
+7. **Tone mapping ACES Filmic**: imagen más realista, sin costo de
    rendimiento.
 
 ## AR estilo Gamma AR (y mejor)
