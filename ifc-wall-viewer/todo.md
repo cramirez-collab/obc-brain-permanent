@@ -1,0 +1,295 @@
+# Project TODO
+
+- [x] Visor 3D básico con GLBs pre-procesados
+- [x] Arquitectura/Estructura en cristal 85% transparencia + aristas
+- [x] MEP en colores sólidos por especialidad
+- [x] Toggles ON/OFF por especialidad
+- [x] Coordenadas X/Y/Z para posicionamiento en obra
+- [x] Fondo blanco
+- [x] Upgrade a full-stack con DB + auth + server
+- [x] Resolver conflictos del merge (mantener IFCViewer + three.js)
+- [x] Modelo de datos: proyectos, usuarios, archivos GLB
+- [x] API tRPC para CRUD de proyectos
+- [x] Dashboard multiproyecto con lista de proyectos
+- [x] Upload de archivos IFC con procesamiento server-side
+- [x] Multiusuario: roles y permisos
+- [x] Filtro por niveles/pisos en el visor 3D (plano de corte Y)
+- [x] Click en elemento con propiedades IFC (raycasting)
+- [x] Plano de corte interactivo (slider X/Y/Z)
+- [x] Toggles funcionales para encender/apagar cada especialidad (bug fix)
+- [x] Escala 1:1 real para caminar dentro del modelo
+- [x] Coordenadas editables para posicionar modelo en sitio (con opción de re-editar)
+- [x] Modo first-person / walk-through para recorrer el edificio (WASD + Q/E)
+- [x] Capas de instalaciones activables/desactivables para verificar posición en obra
+- [x] Arquitectura/estructura en gris transparente como referencia visual
+- [x] GLB proxy streaming en servidor para archivos grandes
+- [x] Tests vitest para API de proyectos
+- [x] Layout responsive móvil/tablet para el visor 3D
+- [x] Botones de zoom táctiles (+/-) para móvil
+- [x] Panel lateral colapsable tipo bottom sheet en móvil
+- [x] Modo caminar con giroscopio (DeviceOrientation API) para orientación automática
+- [x] Controles táctiles de movimiento (joystick virtual) en modo caminar
+- [x] Hamburger menu a la derecha en móvil
+- [x] Minimizar scroll vertical - todo accesible sin scroll excesivo
+- [x] UX espectacular con branding Objetiva
+- [x] Permitir más zoom (min distance más pequeño, max distance más grande)
+- [x] Quitar texto "Caminar" y usar solo iconos (zapatos/monito) sin texto
+- [x] Movimiento natural por escaleras/elevador: detección de piso con raycasting vertical
+- [x] Renderizado continuo de tuberías sin interrupciones (mejor geometría/materiales)
+- [x] Colisiones contra muros: raycasting horizontal para evitar atravesar geometría al caminar
+- [x] Minimapa 2D: planta esquemática con punto de posición del usuario en tiempo real
+- [x] Branding Objetiva: paleta corporativa (verde Objetiva, tipografía, acentos) en header, botones y visor
+- [x] Zoom sin límite perceptible: FOV+dolly dinámico, near/far adaptativo, sin clamp restrictivo
+- [x] Giroscopio mejorado: filtro complementario, deadzone, recenter instantáneo, calibración portrait/landscape
+- [x] Navegación walk-inside anti-mareo: suavizado de movimiento, snap turn opcional, teletransporte
+- [x] Offline-first: Service Worker + Cache Storage para descargar GLBs al dispositivo
+- [x] UX táctil: pinch-to-zoom, doble tap reset, botón recentrar, sensibilidad configurable
+- [x] Indicador de descarga/progreso offline con reintentos
+- [x] Renombrar app a ObjetivaAR (título, branding, package.json, VITE_APP_TITLE)
+- [x] Herramienta de medición: medir distancias entre dos puntos del modelo con clic/tap
+- [x] Captura de pantalla: botón para exportar vista actual como PNG para reportes de campo
+- [x] Filtro rápido por nivel: botones PB/N1/N2/N3 para teletransportarse a cada piso en modo caminar
+- [x] Bug: botón giroscopio no visible/accesible en modo caminar móvil - hacerlo más prominente
+- [x] Bug: botón caminar se superpone con el nombre del proyecto - movido inline con el nombre
+- [x] Control visual avanzado por categoría: color, opacidad, tono, saturación independiente para estructura/arquitectura/instalaciones
+- [x] Edge detection / outline shader: contornos definidos con grosor configurable por categoría
+- [x] Modo rayos X: arquitectura translúcida, estructura sólida, instalaciones destacadas
+- [x] Anotaciones en campo: pins/notas sobre el modelo 3D con texto, guardados en DB por proyecto
+- [x] Compartir vista: generar enlace con posición y orientación de cámara para compartir con equipo
+- [x] Documento técnico: propuesta AR con arquitectura, shaders, UX y funcionalidad innovadora
+- [x] Actualizar selector de niveles a 5 sótanos (S5-S1) + PB + 21 niveles (N1-N21)
+- [x] Bug: pinch-to-zoom regresa a vista base al soltar dedos - desactivado dolly touch en OrbitControls
+- [x] UI header: acortar nombre del proyecto y mover monito caminar a la derecha alineado
+- [x] Bitácora de observaciones con chat de dudas entre usuarios
+- [x] Módulo RFI (Request for Information) con fotos markup
+- [x] Markup de fotos: señalar/rayar sobre imagen (foto de sitio, galería o plano)
+- [x] Mejorar UI/UX general del visor
+- [x] AGRESIVO: Monito = inmersión directa dentro del modelo (first-person walk-through inmediato)
+- [x] AGRESIVO: Slider opacidad muros de gris sólido → transparente (línea de arrastre)
+- [x] AGRESIVO: Pinch-to-zoom que NUNCA regrese a vista base - OrbitControls dolly nativo persiste
+- [x] AGRESIVO: Menú desplegable de pisos integrado en header walk mode
+- [x] AGRESIVO: Coordenadas UTM reales para posicionamiento en sitio (tab Coords)
+- [x] AGRESIVO: Realidad inmersiva total - cámara dentro del modelo con muros semitransparentes
+- [x] Auditoría responsividad: Home page (móvil/tablet/PC)
+- [x] Auditoría responsividad: Bitácora page (móvil/tablet/PC)
+- [x] Auditoría responsividad: RFI page con markup (móvil/tablet/PC)
+- [x] Auditoría responsividad: ProjectViewer header, panel, controles (móvil/tablet/PC)
+- [x] Chat/mensajería: sidebar no fija en móvil, input siempre accesible
+- [x] Hamburger menu a la derecha en todas las páginas móvil
+- [x] Notificaciones push: alertar al owner cuando alguien responde RFI o comenta en observación
+- [x] Exportar reporte PDF: documento con observaciones, RFIs, fotos markup y mediciones del proyecto
+- [x] Calibración UTM con GPS: formulario para ingresar coordenadas UTM y alinear modelo con posición GPS del dispositivo
+- [x] Bug: monito mueve modelo automáticamente al activar walk mode - corregido, no mueve cámara
+- [x] Bug CRÍTICO: cámara se mueve sola en walk mode - eliminada gravedad y movimiento automático
+- [x] Ajustar coordenadas al sistema UTM real del proyecto - auto-carga calibración UTM
+- [x] Documento técnico: arquitectura completa ObjetivaAR (8 puntos obligatorios)
+- [x] Modos visuales: cristal claro, oscuro no translúcido, translúcido, sólido (selector)
+- [x] Botón ocultar todo el mobiliario con un solo clic
+- [x] Aristas siempre activas: modo que no se afecte por cambios de material/transparencia
+- [x] Reemplazar monito por indicador minimalista tipo huellas estilo Autodesk
+- [x] Altura de cámara configurable en modo walk
+- [x] Selector de modo de navegación (órbita/primera persona)
+- [ ] Aplicar cambios visuales por elemento seleccionado (no solo por especialidad)
+- [x] Especificación funcional completa: 8 secciones (arquitectura multiplataforma, giroscopio, especialidades, medición, rejilla, cortes, UI, benchmark)
+- [x] Rejilla adaptativa: resolución dinámica según zoom (10m/1m/10cm) con toggle en configuración
+- [x] Snap a arista en medición: detectar aristas cercanas y proyectar ortogonalmente para precisión centimétrica
+- [x] Detección de colisiones entre especialidades: bounding box + raycasting cruzado con alertas visuales
+- [x] Fix: permitir navegación orbital (OrbitControls) sin bloqueos
+- [x] Bug: OrbitControls pierde centro de giro al orbitar (se sale del centro)
+- [x] Bug: modo orbital no permite entrar al interior del edificio - agregar doble-clic para recentrar target
+- [x] Scroll-wheel recentrado automático: mover target gradualmente hacia cursor al hacer zoom (estilo Google Maps)
+- [x] Indicador visual del punto de giro: mostrar punto/anillo en el target actual de OrbitControls
+- [x] Arrastre directo del plano de corte en viewport 3D (en lugar de solo slider)
+- [x] Upload directo de archivos GLB al crear proyecto: endpoint backend con S3
+- [x] Formulario de creación de proyecto con drag & drop de archivos GLB por especialidad
+- [x] Barra de progreso de upload por archivo
+- [x] Agregar archivos GLB a proyecto existente desde el visor (sin recrear proyecto)
+- [x] Validación de tamaño máximo (advertencia >150MB) antes de upload
+- [x] Thumbnail automático del proyecto: capturar screenshot del viewport como preview en tarjeta
+- [x] Exportar vista como imagen PNG con metadatos (proyecto, fecha, cámara)
+- [x] Plano de corte visual semi-transparente coloreado por eje (rojo X, verde Y, azul Z)
+- [x] Touch gesture para arrastre de corte en móvil (dos dedos vertical)
+- [x] Gizmo de ejes XYZ tipo Revit en esquina del visor (indicador de orientación permanente)
+- [x] Bug: giroscopio mueve el modelo/cámara automáticamente hacia arriba sin interacción del usuario
+- [x] Caché IndexedDB para GLB: almacenar modelos descargados localmente para carga instantánea
+- [x] Caché con fetchGLBWithCache: streaming con progreso + almacenamiento automático en IndexedDB
+- [x] Indicador de progreso mejorado: muestra si carga desde caché o red, con etiqueta visual
+- [x] Precarga inteligente: descargar GLB en background al hover/touch en tarjeta de proyecto
+- [x] Clic en eje del gizmo para alinear vista frontal/planta/lateral instantáneamente
+- [x] Indicador de caché descargado en tarjetas de proyecto en Home
+- [x] Compresión Draco de GLB al subirlos para reducir tamaño 60-80%
+- [x] Modo realidad inmersiva WebXR AR para ver modelo en sitio real con cámara del dispositivo
+- [x] Bug: fromCache TDZ error crasheaba el visor - corregido con variable mutable wasCached
+- [x] Verificar que funcionalidades 1-4 (gizmo clic, caché badge, Draco, AR) están visibles en UI
+- [x] Optimizar GLB pesados: decimation server-side con gltf-transform (simplify/weld/quantize)
+- [x] LOD progresivo: cargar versión simplificada primero, luego full-res en background
+- [x] Mejorar modo AR Android: gestos táctiles para mover/rotar/escalar modelo, instrucciones claras
+- [x] AR: georeferenciación con brújula + GPS para alineación automática en sitio
+- [x] LOD progresivo: generar versión simplificada al upload, cargar primero y reemplazar con full-res en background
+- [x] Georeferenciación AR con brújula + GPS + coordenadas UTM para alineación automática en sitio
+- [x] Service Worker offline completo: cachear HTML/JS/CSS + GLB para funcionar sin internet en obra
+- [x] Selector de modo de navegación (órbita/primera persona) accesible desde header
+- [x] Upload de archivos IFC con procesamiento server-side (IFC→GLB)
+- [x] Upload de archivos RVT (Revit): almacena en S3 + guía al usuario para exportar IFC desde Revit
+- [x] Quitar cuadrícula y color de placa del nivel en modo corte
+- [x] Línea de corte interactiva en footer con indicador de altura (doble flecha)
+- [x] Dimensiones automáticas X/Z en vista planta de cada espacio
+- [x] Dimensiones automáticas Y (piso a techo) en vista corte de cada unidad
+- [x] Filtro de elementos por tipo en vista de corte (muros, losas, MEP, etc.)
+- [x] Upload eléctrico/mecánico: nunca debe fallar — error handling robusto, retries, validación
+- [x] Codos y tubos: renderizado continuo sin interrupciones ni gaps en geometría
+- [x] Filtro de elementos por tipo: UI completa en panel de corte
+- [ ] Color de icono de especialidad según estado de pruebas: naranja si hay pruebas en proceso, verde si todas aceptadas
+- [x] Bug: instalación eléctrica y equipos no aparecen en el visor (sequential loading, chunked cache, retry, toast errors)
+- [x] Bug: tubos/ductos se ven entrecortados/segmentados con gaps (MEP optimization: no quantize, no simplify, high-precision Draco)
+- [x] Carga inicial completa + caché offline robusto (SW cache-first para assets/GLB/fonts/Draco, IndexedDB chunked para GLB grandes, retry con backoff)
+- [x] Reemplazar icono de caminar (monito) por icono de huellas (footprints) — ya usa Footprints de lucide-react
+- [x] Re-procesar TODOS los archivos con nuevo pipeline MEP/optimizado (5/5 completados)
+- [x] Bug: todos los archivos GLB marcan "failed" al cargar (proxy no aceptaba URLs de CloudFront)
+- [x] Fix: tubos/codos cortados - eliminar Draco para MEP, usar meshopt lossless, re-optimizar archivos
+- [x] Fix: modo caminar debe posicionar cámara dentro del modelo a nivel de piso
+- [x] Fix: auto-centrar cámara en el centro del modelo al cambiar vistas (no perderse en el espacio)
+- [x] Selector de pisos mejorado: sótanos S-1, S-2... y desde banqueta Piso 1, 2, 3... con botones grandes
+- [x] Permitir elegir a qué piso ir directamente desde el selector
+- [x] Indicador visual snap/crosshair para inicio y fin de medición (cruz roja + diamante verde snap)
+- [x] Permitir al usuario elegir el color de cada especialidad (color picker)
+- [x] Separar Arquitectura y Estructura como especialidades independientes (actualmente arch_struct)
+- [x] Control de muros: toggle para mostrar/ocultar o bajar opacidad independientemente
+- [x] Etiquetas 3D de número de piso flotantes visibles dentro del modelo (Three.js sprites/CSS2D)
+- [x] Re-procesar MEP sin Draco para eliminar cortes en tubos/codos (pipeline ya usaba meshopt, fix aplicado a upload-convert endpoint)
+- [x] Re-procesar archivos MEP existentes con pipeline sin Draco (botón en visor)
+- [x] Icono de estado de pruebas por especialidad: naranja=en proceso, verde=aceptado
+- [x] Exportar modelo filtrado: descargar solo capas visibles como GLB para compartir
+- [x] Subir archivos separados de Arquitectura y Estructura al proyecto existente (mantenido combinado en proyecto actual, separación disponible para nuevos proyectos)
+- [x] Etiquetas de piso siempre visibles desde cualquier ángulo/nivel, tamaño adaptativo, mejor posición (4 lados, depthTest:false, fuente 72px)
+- [x] Modo inmersivo: facilitar encontrar el piso, cámara en esquina del modelo mirando al centro, HUD grande de nivel actual
+- [x] Reemplazar etiquetas flotantes por letreros pegados a muros/columnas: nivel y número de piso como señalización real de obra (PlaneGeometry 1.2×0.6m, raycasting a muros, NIVEL + número)
+- [x] Ajustar posición de letreros de piso: 4 por nivel (front/back/left/right), 2m×1m, raycasting multi-origen, alta visibilidad
+- [x] Fix performance: letreros de piso lazy-created solo para pisos en rango del modelo (de 108 a ~10-15 meshes)
+- [x] Fix UX: todos los botones ahora tienen texto descriptivo + tooltips (Centrar Vista, Mostrar/Ocultar Todo, Color, etc.)
+- [x] Botón AR visible y claro en el header del visor (llamarlo "AR")
+- [x] Fix: hamburguesa tapa icono verde — movido panel toggle debajo del header en móvil
+- [x] Responsive tablet/móvil/PC: header oculta Bitácora/RFI/Reporte/UTM en móvil, botones flotantes Avance+Medir
+- [x] Modo Avance: tocar elemento lo pinta verde Objetiva (inspección visual) — botón flotante "Avance"
+- [x] Fix: números de piso/nivel siempre visibles — depthTest:false, transparentes a través de geometría
+- [x] Botón Medir flotante accesible en móvil/tablet/PC con texto "Medir"
+- [x] Fix AR: modo inmersivo directo — auto-coloca modelo 1:1, cámara dentro en Piso 1, muros semitransparentes, caminar físicamente
+- [x] Fix AR: error "already an active XRSession" — guard de sesión activa + arStarting anti-double-tap + delay 300ms para liberar sesión
+- [x] Selector de piso dentro de AR: botones flotantes para cambiar de nivel sin salir del modo inmersivo
+- [x] Persistir elementos pintados (Avance): guardar en DB qué meshes fueron marcados verdes, restaurar al recargar
+- [x] Optimización de velocidad: carga progresiva, geometry merging, frustum culling agresivo
+- [x] Fidelidad visual nivel Revit: iluminación PBR realista, ambient occlusion, sombras suaves, materiales detallados
+- [x] Navegación walk-through fluida: movimiento suave, colisiones robustas, detección de piso precisa, cámara first-person inmersiva
+- [x] Reducción de draw calls: instancing, merge de geometrías estáticas, LOD automático
+- [x] Renderer optimizado: tone mapping, antialiasing, resolución adaptativa según dispositivo
+- [x] Minimap mejorado: planta del piso actual con posición del usuario en tiempo real, indicador de orientación, etiqueta de piso, transiciones suaves
+- [x] AR mode entry: spawn usuario en PB interior (elevadores/pasillo Y=1.20m sobre terreno), giroscopio activo inmediato, sin vista exterior lejana del edificio
+- [x] Bug fix: estructura se ve negra en PC - materiales deben ser consistentes en todos los dispositivos
+- [x] Bug fix: no aparecen líneas de medición ni etiquetas con valores exactos en m/cm al medir
+- [x] Bug fix: no pintar verde la estructura/arquitectura en modo Avance - solo MEP debe ser pintable
+- [x] Bug fix: selector de colores por especialidad no visible/accesible (cuadro más grande, icono Pipette, dropdown más ancho)
+- [x] Bug fix: tuberías y ductos cortados/truncados - pipeline ahora 100% lossless (sin simplify, sin quantize, sin draco - solo dedup+weld+prune+meshopt)
+- [x] Bug fix: scroll del mouse rota el modelo en vez de hacer zoom - corregir controles de cámara
+- [x] Permitir subir archivos de especialidades uno a uno de forma independiente (ya existía en ProjectViewer, verificado funcional)
+- [x] Separar Arquitectura y Estructura como especialidades independientes (no ligar siempre juntas)
+- [x] Verificar y corregir pipeline de conversión RVT→GLB: IFC→GLB funciona, RVT almacena y guía exportación desde Revit (formato propietario)
+- [x] Reducir/eliminar optimización agresiva: pipeline ahora 100% lossless para TODAS las especialidades (dedup+weld+prune+meshopt, cero pérdida de geometría)
+- [x] Actualizar logo y favicon de ObjetivaAR con nuevo logo OAR (azul marino + verde)
+- [x] Aceptar archivos RVT hasta 300MB sin perder información - límites actualizados en frontend (300MB), backend (350MB body parser), timeouts (10min conversión, 8min GLB)
+- [x] Botón visible para subir más archivos desde el visor del proyecto (no oculto en pestaña de configuración)
+- [x] Bug fix: archivo RVT subido de arquitectura no aparece en el visor
+- [x] Registrar archivos en DB desde ProjectViewer (handleAddFile ahora llama addFileMutation)
+- [x] Archivos RVT se registran en DB con conversionStatus=pending_conversion y badge visual en layer list
+- [x] Botón "Reemplazar con GLB/IFC" en archivos con conversión pendiente
+- [x] Bug fix: error 403 al subir archivo de arquitectura desde el visor (upload directo a S3 sin pasar por proxy)
+- [x] Actualizar especialidades a las 9 definidas: Aire acondicionado, Arquitectura, Eléctrico, Estructuras, Gas, Hidráulico, Pluvial, Protección contra incendios, Sanitario
+- [x] Agregar 3 slots de especialidad personalizable donde el usuario pone el nombre
+- [x] Asegurar que el flujo de conversión IFC/RVT→GLB funcione correctamente con las APIs existentes sin perder datos
+- [x] Actualizar Home.tsx con las nuevas especialidades + custom slots
+- [x] Actualizar ProjectViewer.tsx con las nuevas especialidades + custom slots
+- [x] Botón eliminar capa en el panel de capas del visor
+- [x] Persistir nombres de especialidades custom en DB (ya se guardan en campo label de project_files)
+- [x] Drag & drop de archivos sobre el visor 3D para subir sin abrir diálogo
+- [x] Pipeline completo RVT→IFC→GLB en servidor via Autodesk APS preservando todos los detalles
+- [x] Conversión SVF1→GLB via forge-convert-utils para archivos grandes (>60MB IFC) que fallan con web-ifc
+- [x] Sanitario: RVT→SVF1→GLB convertido y subido a S3 (24MB GLB)
+- [x] Hidráulico: RVT→SVF1→GLB convertido y subido a S3 (913MB GLB)
+- [x] Arquitectura: RVT→SVF1→GLB convertido y subido a S3 (351MB GLB)
+- [x] Eléctrico: RVT→SVF1→GLB convertido y subido a S3 (798MB GLB)
+- [x] 9/9 especialidades del proyecto Hidalma con archivos GLB listos en DB (conversionStatus=ready)
+- [x] Fix TypeScript: Buffer→Uint8Array cast en apsConvert.ts para fetch body compatibility
+- [x] Reemplazar TODOS los archivos GLB con nuevos RVTs del Google Drive de Hidalma (9 archivos)
+- [x] Descargar 9 archivos RVT nuevos desde Google Drive
+- [x] Subir 9 RVTs a APS y convertir SVF1→GLB (7 exitosos en primera ronda)
+- [x] Eléctrico e Hidráulico: conversión con enfoque low-memory (skipPropertyDb + streaming GLB pack)
+- [x] Actualizar DB con las 9 URLs de GLB nuevos en S3
+- [x] Bug: Error 500 al cargar GLBs de Gas, Arquitectura e Hidráulico (Failed to fetch GLB: 500) - fix: Range-based chunked downloads para archivos >50MB
+- [x] Optimizar carga GLBs: página se congela ("no responde") al parsear modelos grandes (798MB, 913MB, 351MB)
+- [x] Implementar carga progresiva: modelos pequeños primero, pesados después
+- [x] Yield al hilo principal durante parsing para evitar bloqueo de UI
+- [x] Ordenar archivos por tamaño ascendente para carga rápida inicial
+- [x] Optimizar velocidad de carga: descarga paralela de chunks (4 concurrentes), skip clasificación geométrica para modelos >200MB
+- [x] Indicador de progreso global visible ("Cargando [nombre] X/9")
+- [x] Carga paralela inteligente: archivos pequeños (<100MB) en batches de 3, grandes secuenciales
+- [x] Bug: Failed to fetch al cargar Structure en el visor de Hidalma - fix: re-subir todos los 9 GLBs a S3 permanente (CloudFront storagePut)
+- [x] Re-subir 9 GLBs a S3 permanente via storagePut (URLs manuscdn expiraron 403)
+- [x] Eléctrico: re-subido via curl a S3 permanente (797.8MB)
+- [x] Hidráulico: re-subido via curl a S3 permanente (912.9MB)
+- [x] Persistencia permanente de archivos: URLs via storageGet nunca expiran, cache IndexedDB con fileKey estable
+- [x] Descarga correcta en cache del dispositivo: flujo robusto descarga → cache → recarga instantánea
+- [x] Georreferenciación sin errores: input coordenadas X,Y,Z funcional para posicionar modelo en obra
+- [x] Hidráulico: completar pipeline APS → SVF → GLB → S3 (completado 912.9MB)
+- [x] Optimizar velocidad de carga: Draco compression para 7 archivos (745MB → 13.8MB, 98.1% reducción)
+- [x] Nuevos fileKeys (v2 suffix) para bypass CloudFront cache y forzar descarga de versiones comprimidas
+- [x] Verificar cache IndexedDB funciona con nuevos fileKeys (cache key cambia → descarga nueva versión)
+- [x] Fix tests addFile.test.ts: crear proyecto dinámicamente en beforeAll (no asumir id=1)
+- [x] Limpiar proyecto de prueba "Test Project for addFile" del dashboard + afterAll cleanup en tests
+- [x] Comprimir Eléctrico e Hidráulico con gzip pre-comprimido en S3 (798MB→116MB, 913MB→68MB, 85-92% reducción)
+- [x] Indicador de progreso individual por especialidad: color dot + label + size + status icon + mini progress bar
+- [x] Estimación de tiempo restante por archivo durante descarga (velocidad actual + ETA)
+- [x] Botón "Descargar todo offline" para pre-cachear 9 archivos en background
+- [x] Verificar compatibilidad gzip en Safari/Chrome móvil (Content-Encoding: gzip estándar HTTP, compatible con todos los navegadores)
+- [x] Comprimir Eléctrico (798MB→173MB) e Hidráulico (913MB→171MB) con Draco sin pérdida de calidad (split+compress+merge)
+- [x] Service Worker PWA completa: manifest.json, meta tags, apple-mobile-web-app-capable, icons 32/180/192/512
+- [x] Notificación push (notifyOwner) cuando se agregan nuevos archivos al proyecto
+- [x] Diagnosticar y corregir orientación de modelos GLB: tab Alinear con controles rotación/posición/escala por modelo
+- [x] Tab Alinear con presets rápidos (Z-up→Y-up, Pies→Metros, Reset) + guardado en DB
+- [x] Transformación por modelo: rotX/Y/Z, posX/Y/Z, escala con preview en tiempo real
+- [x] Pre-cache automático: botón descargar offline + cache IndexedDB persistente
+- [x] Analizar bounding box y sistema de coordenadas de los 9 modelos GLB
+- [x] Calcular transformaciones exactas para alinear TODOS los modelos (rotación, posición, escala)
+- [x] Identificar y mapear niveles: PB, N1, N2... hasta último nivel (2 sótanos + PB + 22 niveles)
+- [x] Guardar transformaciones en DB para que se apliquen automáticamente (Eléctrico/Hidráulico: rotX=-90°, scale=0.3048)
+- [x] Fix InstancedMesh: modelos con EXT_mesh_gpu_instancing (Sanitario, Pluvial, etc.) ahora se renderizan correctamente
+- [x] Mantener InstancedMesh nativo para rendimiento GPU (no expandir a meshes individuales)
+- [x] FLOOR_LEVELS actualizado con alturas precisas en metros: S2(-8.0), S1(-4.9), PB(0.0), N1-N22 hasta Azotea(79.9)
+- [x] Selector de pisos actualizado con 2 sótanos + PB + 22 niveles (labels S2, S1, PB, N1...N22)
+- [x] updateMatrixWorld(true) antes de traversar meshes para propagar transformaciones del nodo raíz
+- [x] Corte automático por nivel: al seleccionar un piso, ocultar toda la geometría por encima para ver planta limpia
+- [x] Nomenclatura profesional de niveles (Sótano 2, Sótano 1, Planta Baja, Nivel 1...Nivel 22, Azotea)
+- [x] Verificar alineación visual completa de los 9 modelos
+- [x] Filtro combinado disciplina + nivel: ver solo una disciplina aislada en un nivel específico
+- [x] UI integrada: al aislar nivel, mostrar chips de disciplinas visibles con toggle y doble-clic para aislar
+- [x] Exportar vista como imagen HD 2x con marca de agua (nivel, disciplinas, proyecto, fecha)
+- [x] Herramienta de medición en cadena (múltiples puntos) con distancia acumulada y exportación
+- [x] Sistema de anotaciones con categorías (observación/defecto/aprobado/informativo), persistencia DB, asociación nivel, resolver/reabrir, navegar a ubicación
+- [x] Optimizar carga de Eléctrico (173MB) e Hidráulico (171MB): gzip 85-94% reducción, carga paralela, progreso preciso
+- [x] Comprimir con gzip: Eléctrico 173MB→25MB (85%), Hidráulico 171MB→11MB (94%) subidos a S3
+- [x] Carga paralela de archivos grandes comprimidos (gzip permite descarga simultánea)
+- [x] Progreso de descarga preciso para archivos gzip (usa fileSize original como referencia)
+- [x] Skip edges/BVH/clasificación geométrica para modelos >50MB (26M+ triángulos)
+- [x] Indicador visual "Descarga comprimida (gzip)" en panel de progreso
+- [x] Rediseñar UX de medición: HUD guiado centrado con pasos 1→2→resultado, animaciones pulsantes
+- [x] Instrucciones visuales claras en pantalla: "Toca punto A" / "Toca punto B" con indicador de paso
+- [x] Snap automático a aristas con indicador visual Target
+- [x] Resultado grande centrado con ΔX/ΔY/ΔZ, botones Guardar/Nueva medición
+- [x] Toggle A→B / A→B→C accesible desde el mismo HUD (pills en header)
+- [x] Modo cadena con lista de segmentos, total acumulado, y exportar CSV
+- [x] Historial de mediciones guardadas con contador en footer del HUD
+- [x] Preview en tiempo real: línea punteada desde punto A hasta cursor mientras se mueve (dashed line + distancia flotante)
+- [x] Medición de áreas: seleccionar 3+ puntos para calcular superficie en m² (polígono 3D con Newell method, fill semitransparente, perímetro, HUD completo)
+- [x] Toggle en HUD: Distancia / Área como modos de medición (3 modos: A→B, A→B→C, Área)
+- [x] Visualización de polígono semitransparente para área (ShapeGeometry con fill 20% opacity + closing dashed line)
+- [x] Resultado de área en m² con perímetro total (HUD + sidebar con m²/cm² + perímetro + vértices)
+- [x] Optimizar parsing Eléctrico/Hidráulico: fast path (batch 500, shared material, skip normals/bbox/BVH), parallel IndexedDB I/O, prefetch gzip en Home
+- [x] Carga instantánea Eléctrico/Hidráulico: geometry merging (2000 meshes → 1-4 draw calls) + ultra-fast path con mergeGeometries

@@ -1,0 +1,1 @@
+ALTER TABLE `project_files` ADD `inspectionStatus` enum('pending','in_progress','accepted','rejected') DEFAULT 'pending' NOT NULL;
