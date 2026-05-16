@@ -1125,6 +1125,14 @@ export default function ProjectViewer() {
     /* ─── Animate loop ─── */
     let lastTime = performance.now();
 
+    // Adaptive resolution: keep the framerate smooth on heavy scenes /
+    // weaker GPUs by trading pixel density for speed, restoring it when idle.
+    const maxDpr = Math.min(window.devicePixelRatio, isMobile ? 1.5 : 2);
+    const minDpr = Math.min(maxDpr, 1);
+    let curDpr = maxDpr;
+    let frameEMA = 16;
+    let dprCooldown = 0;
+
     function animate() {
       animFrameRef.current = requestAnimationFrame(animate);
       const now = performance.now();
@@ -1248,6 +1256,22 @@ export default function ProjectViewer() {
         gridFine.visible = camDist < 10;
         gridMedium.visible = camDist >= 5 && camDist < 60;
         gridCoarse.visible = camDist >= 40;
+      }
+
+      // Adaptive resolution (skip while in XR — the AR loop owns the buffer)
+      if (!renderer.xr.isPresenting) {
+        frameEMA = frameEMA * 0.9 + Math.min(dt * 1000, 50) * 0.1;
+        if (dprCooldown > 0) {
+          dprCooldown--;
+        } else if (frameEMA > 33 && curDpr > minDpr) {
+          curDpr = Math.max(minDpr, curDpr - 0.25);
+          renderer.setPixelRatio(curDpr);
+          dprCooldown = 45;
+        } else if (frameEMA < 19 && curDpr < maxDpr) {
+          curDpr = Math.min(maxDpr, curDpr + 0.25);
+          renderer.setPixelRatio(curDpr);
+          dprCooldown = 90;
+        }
       }
 
       renderer.render(scene, camera);
@@ -2010,7 +2034,108 @@ export default function ProjectViewer() {
     return dracoLoaderRef.current;
   }, []);
 
+  /* Rebuild Three.js objects from the transferable data produced by the
+   * GLB parse worker. This is all cheap (no decode/merge here). */
+  const buildGroupFromWorkerData = useCallback((data: any, file: (typeof files)[0]): { group: THREE.Group; edgeGroup: THREE.Group } => {
+    const isTransparent = file.transparent === 1;
+    const opacity = file.opacity / 100;
+    const isPipe = PIPE_SPECIALTIES.includes(file.specialty);
+    const sharedMat = isPipe
+      ? new THREE.MeshStandardMaterial({ color: new THREE.Color(file.color), transparent: isTransparent, opacity, side: THREE.DoubleSide, depthWrite: true, metalness: 0.35, roughness: 0.35, flatShading: false, envMapIntensity: 0.8 })
+      : new THREE.MeshStandardMaterial({ color: new THREE.Color(file.color), transparent: isTransparent, opacity, side: THREE.DoubleSide, depthWrite: !isTransparent, roughness: 0.7, metalness: 0.0, envMapIntensity: isTransparent ? 0.3 : 0.5 });
+
+    const group = new THREE.Group();
+    group.name = file.specialty;
+    const edgeGroup = new THREE.Group();
+    edgeGroup.name = `${file.specialty}_edges`;
+
+    const mkGeo = (p: any) => {
+      const g = new THREE.BufferGeometry();
+      g.setAttribute("position", new THREE.BufferAttribute(p.position, 3));
+      if (p.normal) g.setAttribute("normal", new THREE.BufferAttribute(p.normal, 3));
+      if (p.index) g.setIndex(new THREE.BufferAttribute(p.index, 1));
+      return g;
+    };
+
+    (data.merged || []).forEach((p: any, i: number) => {
+      const mesh = new THREE.Mesh(mkGeo(p), sharedMat);
+      mesh.matrixAutoUpdate = false;
+      mesh.name = `${file.specialty}_merged_${i}`;
+      mesh.castShadow = false;
+      mesh.receiveShadow = false;
+      mesh.userData = { specialty: file.label, fileSpecialty: file.specialty, elementType: "mep", fileId: file.id, meshIndex: i, merged: true };
+      group.add(mesh);
+    });
+
+    (data.instanced || []).forEach((p: any) => {
+      const geo = mkGeo(p);
+      const im = new THREE.InstancedMesh(geo, sharedMat, p.count);
+      im.instanceMatrix = new THREE.InstancedBufferAttribute(p.instanceMatrix, 16);
+      im.instanceMatrix.needsUpdate = true;
+      if (p.instanceColor) {
+        im.instanceColor = new THREE.InstancedBufferAttribute(p.instanceColor, 3);
+        im.instanceColor.needsUpdate = true;
+      }
+      im.matrixAutoUpdate = false;
+      im.matrix.fromArray(p.matrixWorld);
+      im.name = "";
+      im.castShadow = false;
+      im.receiveShadow = false;
+      im.userData = { specialty: file.label, fileSpecialty: file.specialty, elementType: "instanced", fileId: file.id };
+      group.add(im);
+    });
+
+    return { group, edgeGroup };
+  }, []);
+
+  /* Parse a large GLB entirely off the main thread (no UI freeze). */
+  const parseLargeGLBViaWorker = useCallback((buffer: ArrayBuffer, file: (typeof files)[0]): Promise<{ group: THREE.Group; edgeGroup: THREE.Group }> => {
+    return new Promise((resolve, reject) => {
+      let worker: Worker;
+      try {
+        worker = new Worker(new URL("../lib/glbParseWorker.ts", import.meta.url), { type: "module" });
+      } catch (e) {
+        reject(e);
+        return;
+      }
+      const cleanup = () => { try { worker.terminate(); } catch { /* noop */ } };
+      const timeout = setTimeout(() => { cleanup(); reject(new Error("worker timeout")); }, 240000);
+      worker.onmessage = (ev: MessageEvent) => {
+        clearTimeout(timeout);
+        const d: any = ev.data;
+        if (!d || !d.ok) { cleanup(); reject(new Error(d?.error || "worker failed")); return; }
+        try {
+          const built = buildGroupFromWorkerData(d, file);
+          cleanup();
+          resolve(built);
+        } catch (e) { cleanup(); reject(e); }
+      };
+      worker.onerror = (err: ErrorEvent) => {
+        clearTimeout(timeout);
+        cleanup();
+        reject(new Error(err.message || "worker error"));
+      };
+      worker.postMessage({
+        buffer,
+        dracoPath: "https://www.gstatic.com/draco/versioned/decoders/1.5.6/",
+        cores: typeof navigator !== "undefined" ? navigator.hardwareConcurrency || 4 : 4,
+      });
+    });
+  }, [buildGroupFromWorkerData]);
+
   const parseGLBToGroups = useCallback(async (buffer: ArrayBuffer, file: (typeof files)[0]): Promise<{ group: THREE.Group; edgeGroup: THREE.Group }> => {
+    // Large models: do the whole parse+decode+merge in a worker so the UI
+    // never freezes. Falls back to the main-thread path on any error.
+    if ((file.fileSize || 0) > 50 * 1024 * 1024) {
+      try {
+        const t0 = performance.now();
+        const built = await parseLargeGLBViaWorker(buffer, file);
+        console.log(`[Parse] ${file.specialty}: WORKER path done in ${(performance.now() - t0).toFixed(0)}ms (off main thread)`);
+        return built;
+      } catch (err) {
+        console.warn(`[Parse] ${file.specialty}: worker failed, main-thread fallback`, err);
+      }
+    }
     const loader = new GLTFLoader();
     loader.setDRACOLoader(getDracoLoader());
     // Support meshopt-compressed GLBs (lossless MEP pipeline)
@@ -2321,7 +2446,7 @@ export default function ProjectViewer() {
     } // end if/else isLargeModel
 
     return { group, edgeGroup };
-  }, [getDracoLoader]);
+  }, [getDracoLoader, parseLargeGLBViaWorker]);
 
   /* Helper: apply per-model transform from DB (rotation, position, scale) */
   const applyModelTransform = useCallback((group: THREE.Group, edgeGroup: THREE.Group, file: (typeof files)[0]) => {
