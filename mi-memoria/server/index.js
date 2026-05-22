@@ -156,4 +156,15 @@ app.post('/api/test', auth, async (req, res) => {
   } catch (e) { res.status(502).json({ error: e.message }); }
 });
 
+// Permite que un cron externo (p.ej. cron-job.org) dispare el envío cada minuto.
+// Útil en hosting gratuito que "duerme" el servicio: cada ping lo despierta y revisa.
+// Autoriza por header X-Api-Key o por ?key=...
+app.all('/api/cron', async (req, res) => {
+  if (API_KEY && req.get('X-Api-Key') !== API_KEY && req.query.key !== API_KEY) {
+    return res.status(401).json({ error: 'no autorizado' });
+  }
+  await checkDue().catch((e) => console.error(e));
+  res.json({ ok: true, ts: new Date().toISOString() });
+});
+
 app.listen(PORT, () => console.log(`Mi Memoria · WhatsApp backend en :${PORT} (proveedor: ${PROVIDER})`));

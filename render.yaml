@@ -1,0 +1,30 @@
+# Blueprint de Render para el backend de WhatsApp de "Mi Memoria".
+# En https://dashboard.render.com → New → Blueprint → conecta este repo.
+# Render leerá este archivo y creará el servicio. Rellena los valores marcados
+# como "sync: false" (secretos) en el panel después de crearlo.
+services:
+  - type: web
+    name: mi-memoria-whatsapp
+    runtime: node
+    rootDir: mi-memoria/server
+    plan: free
+    buildCommand: npm install
+    startCommand: npm start
+    healthCheckPath: /api/health
+    envVars:
+      - key: API_KEY
+        generateValue: true            # Render genera una clave segura automáticamente
+      - key: PROVIDER
+        value: meta                     # "meta" (WhatsApp Cloud API) o "twilio"
+      - key: ALLOW_ORIGIN
+        value: https://cramirez-collab.github.io
+      - key: WHATSAPP_TEMPLATE
+        value: recordatorio
+      - key: WHATSAPP_TEMPLATE_LANG
+        value: es_MX
+      - key: DEFAULT_TO
+        sync: false                     # tu WhatsApp (solo dígitos, con país)
+      - key: WHATSAPP_TOKEN
+        sync: false                     # token de Meta
+      - key: WHATSAPP_PHONE_ID
+        sync: false                     # Phone Number ID de Meta
