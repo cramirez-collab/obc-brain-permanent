@@ -278,13 +278,14 @@ function fmtUTC(date) {
     'T' + dosD(d.getUTCHours()) + dosD(d.getUTCMinutes()) + dosD(d.getUTCSeconds()) + 'Z';
 }
 
-function rrule(rec) {
+export function rruleString(rec) {
   if (!rec) return '';
   let r = 'FREQ=' + rec.freq;
   if (rec.byday) r += ';BYDAY=' + rec.byday;
   if (rec.bymonthday) r += ';BYMONTHDAY=' + rec.bymonthday;
   return r;
 }
+const rrule = rruleString;
 
 export function toICS(item) {
   const start = new Date(item.fechaISO);
@@ -408,6 +409,30 @@ export function programarNotificaciones(items, opts = {}) {
       }, delay);
       _timers.push(id);
     }
+  });
+}
+
+// ---------- sincronización con backend de WhatsApp ----------
+/** Envía/actualiza el recordatorio en el backend para que lo mande por WhatsApp a su hora. */
+export async function backendSync(baseUrl, apiKey, item, to) {
+  if (!baseUrl) return null;
+  const r = await fetch(baseUrl.replace(/\/+$/, '') + '/api/reminders', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'X-Api-Key': apiKey || '' },
+    body: JSON.stringify({
+      id: item.id, titulo: item.titulo, fechaISO: item.fechaISO,
+      alarmaMin: item.alarmaMin || 0, recurrencia: item.recurrencia || null,
+      to: (to || '').replace(/[^\d]/g, ''),
+    }),
+  });
+  if (!r.ok) throw new Error('Backend ' + r.status);
+  return r.json().catch(() => ({}));
+}
+
+export async function backendDelete(baseUrl, apiKey, id) {
+  if (!baseUrl) return null;
+  return fetch(baseUrl.replace(/\/+$/, '') + '/api/reminders/' + encodeURIComponent(id), {
+    method: 'DELETE', headers: { 'X-Api-Key': apiKey || '' },
   });
 }
 

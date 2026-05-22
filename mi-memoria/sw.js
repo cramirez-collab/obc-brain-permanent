@@ -1,6 +1,6 @@
 /* Mi Memoria — service worker mínimo: cachea el shell para uso offline. */
-const CACHE = 'mi-memoria-v1';
-const ASSETS = ['./', './index.html', './memoria-core.js', './manifest.webmanifest'];
+const CACHE = 'mi-memoria-v2';
+const ASSETS = ['./', './index.html', './memoria-core.js', './google-calendar.js', './manifest.webmanifest'];
 
 self.addEventListener('install', (e) => {
   e.waitUntil(caches.open(CACHE).then((c) => c.addAll(ASSETS)).then(() => self.skipWaiting()));

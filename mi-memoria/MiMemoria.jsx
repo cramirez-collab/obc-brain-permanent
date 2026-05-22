@@ -15,12 +15,13 @@ import { useEffect, useRef, useState, useCallback } from 'react';
 import {
   TIPOS, parseSpanish, crearItem, store, descargarICS, googleCalendarUrl,
   whatsappUrl, formatFechaHumana, hablar, pedirPermisoNotificaciones,
-  programarNotificaciones,
+  programarNotificaciones, backendSync, backendDelete,
 } from './memoria-core.js';
+import { initGoogle, googleConectado, conectarGoogle, desconectarGoogle, crearEventoGoogle } from './google-calendar.js';
 
 const SET_KEY = 'obc_mi_memoria_set_v1';
 const loadSettings = () => Object.assign(
-  { lang: 'es-MX', defaultHour: 9, leadMin: 10, whatsapp: '' },
+  { lang: 'es-MX', defaultHour: 9, leadMin: 10, whatsapp: '', googleClientId: '', backendUrl: '', backendKey: '' },
   (typeof localStorage !== 'undefined' && JSON.parse(localStorage.getItem(SET_KEY) || '{}')) || {}
 );
 const toLocalInput = (d) => {
@@ -36,7 +37,17 @@ export default function MiMemoria() {
   const [listening, setListening] = useState(false);
   const [transcript, setTranscript] = useState('');
   const [manual, setManual] = useState('');
+  const [gconn, setGconn] = useState(false);
   const recogRef = useRef(null);
+
+  // Carga Google Identity Services una sola vez
+  useEffect(() => {
+    if (document.getElementById('gis-script')) return;
+    const s = document.createElement('script');
+    s.id = 'gis-script'; s.src = 'https://accounts.google.com/gsi/client'; s.async = true; s.defer = true;
+    document.head.appendChild(s);
+  }, []);
+  useEffect(() => { initGoogle(settings.googleClientId); }, [settings.googleClientId]);
 
   const refresh = useCallback(() => {
     const all = store.all().sort((a, b) => new Date(a.fechaISO) - new Date(b.fechaISO));
@@ -88,6 +99,18 @@ export default function MiMemoria() {
     });
     store.save(item); setParsed(null); setTranscript(''); refresh();
     hablar('Listo. Te recordaré ' + item.titulo, settings.lang);
+    sincronizar(item);
+  };
+
+  // Empuja a Google Calendar y/o backend de WhatsApp si están configurados
+  const sincronizar = async (item) => {
+    if (settings.googleClientId && googleConectado()) {
+      try { await crearEventoGoogle(item); } catch (e) { alert('Google: ' + (e.message || 'error')); }
+    }
+    if (settings.backendUrl) {
+      try { await backendSync(settings.backendUrl, settings.backendKey, item, settings.whatsapp); }
+      catch (e) { alert('WhatsApp backend: ' + (e.message || 'error')); }
+    }
   };
 
   const onAct = (it, act) => {
@@ -96,8 +119,8 @@ export default function MiMemoria() {
     else if (act === 'ics') descargarICS(it);
     else if (act === 'wa') { if (!settings.whatsapp) return alert('Agrega tu WhatsApp en Ajustes'); window.open(whatsappUrl(it, settings.whatsapp), '_blank'); }
     else if (act === 'speak') hablar(it.titulo + '. ' + formatFechaHumana(it.fechaISO, it.tieneHora), settings.lang);
-    else if (act === 'edit') { setParsed({ ...it, _fecha: it.fechaISO, fecha: new Date(it.fechaISO) }); store.remove(it.id); refresh(); }
-    else if (act === 'del') { store.remove(it.id); refresh(); }
+    else if (act === 'edit') { setParsed({ ...it, _fecha: it.fechaISO, fecha: new Date(it.fechaISO) }); store.remove(it.id); refresh(); if (settings.backendUrl) backendDelete(settings.backendUrl, settings.backendKey, it.id).catch(() => {}); }
+    else if (act === 'del') { store.remove(it.id); refresh(); if (settings.backendUrl) backendDelete(settings.backendUrl, settings.backendKey, it.id).catch(() => {}); }
   };
 
   const activos = items.filter((i) => !i.hecho);
@@ -221,6 +244,38 @@ export default function MiMemoria() {
             <Field label="Hora por defecto"><input type="number" min="0" max="23" value={settings.defaultHour} onChange={(e) => set('defaultHour', +e.target.value)} className="px-3 py-2 border border-slate-300 rounded-lg text-sm w-full" /></Field>
             <Field label="Avisarme antes (min)"><input type="number" min="0" max="1440" value={settings.leadMin} onChange={(e) => set('leadMin', +e.target.value)} className="px-3 py-2 border border-slate-300 rounded-lg text-sm w-full" /></Field>
             <Field label="WhatsApp (código país)"><input type="tel" placeholder="521…" value={settings.whatsapp} onChange={(e) => set('whatsapp', e.target.value)} className="px-3 py-2 border border-slate-300 rounded-lg text-sm w-full" /></Field>
+          </div>
+
+          {/* Google Calendar */}
+          <div className="border-t border-slate-200 mt-4 pt-4">
+            <div className="flex items-center justify-between mb-2">
+              <div><strong className="text-sm">Google Calendar</strong><p className="text-xs text-slate-400">Crea el evento directo en tu Google al guardar</p></div>
+              <span className={`text-xs px-2 py-0.5 rounded-full font-semibold ${gconn ? 'bg-emerald-50 text-emerald-600' : 'bg-red-50 text-red-600'}`}>{gconn ? 'Conectado' : 'Sin conectar'}</span>
+            </div>
+            <Field label="Client ID de Google (OAuth)"><input type="text" placeholder="xxxx.apps.googleusercontent.com" value={settings.googleClientId} onChange={(e) => set('googleClientId', e.target.value)} className="px-3 py-2 border border-slate-300 rounded-lg text-sm w-full" /></Field>
+            <div className="flex gap-2 mt-2">
+              <button onClick={async () => { if (!settings.googleClientId) return alert('Pega tu Client ID'); try { await conectarGoogle(); setGconn(true); } catch (e) { alert('Google: ' + (e.message || 'error')); } }} className="px-3 py-1.5 border border-slate-200 rounded-lg text-sm">Conectar Google</button>
+              <button onClick={() => { desconectarGoogle(); setGconn(false); }} className="px-3 py-1.5 rounded-lg text-sm text-slate-600">Desconectar</button>
+            </div>
+          </div>
+
+          {/* WhatsApp automático */}
+          <div className="border-t border-slate-200 mt-4 pt-4">
+            <div className="flex items-center justify-between mb-2">
+              <div><strong className="text-sm">WhatsApp automático</strong><p className="text-xs text-slate-400">Envía el recordatorio a tu WhatsApp a la hora exacta (requiere backend)</p></div>
+              <span className={`text-xs px-2 py-0.5 rounded-full font-semibold ${settings.backendUrl ? 'bg-emerald-50 text-emerald-600' : 'bg-red-50 text-red-600'}`}>{settings.backendUrl ? 'Activo' : 'Apagado'}</span>
+            </div>
+            <div className="grid sm:grid-cols-2 gap-4">
+              <Field label="URL del backend"><input type="url" placeholder="https://tu-backend.onrender.com" value={settings.backendUrl} onChange={(e) => set('backendUrl', e.target.value)} className="px-3 py-2 border border-slate-300 rounded-lg text-sm w-full" /></Field>
+              <Field label="API Key del backend"><input type="password" placeholder="clave secreta" value={settings.backendKey} onChange={(e) => set('backendKey', e.target.value)} className="px-3 py-2 border border-slate-300 rounded-lg text-sm w-full" /></Field>
+            </div>
+            <button onClick={async () => {
+              if (!settings.backendUrl || !settings.whatsapp) return alert('Configura URL del backend y tu WhatsApp');
+              try {
+                const r = await fetch(settings.backendUrl.replace(/\/+$/, '') + '/api/test', { method: 'POST', headers: { 'Content-Type': 'application/json', 'X-Api-Key': settings.backendKey || '' }, body: JSON.stringify({ to: settings.whatsapp.replace(/[^\d]/g, '') }) });
+                alert(r.ok ? 'Mensaje de prueba enviado ✓' : 'Error backend ' + r.status);
+              } catch { alert('No se pudo contactar el backend'); }
+            }} className="mt-2 px-3 py-1.5 border border-slate-200 rounded-lg text-sm">Enviar WhatsApp de prueba</button>
           </div>
         </div>
       </details>

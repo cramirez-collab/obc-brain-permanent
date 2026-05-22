@@ -10,6 +10,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes" />
 <meta name="apple-mobile-web-app-title" content="Mi Memoria" />
 <link rel="manifest" href="./manifest.webmanifest" />
+<script src="https://accounts.google.com/gsi/client" async defer></script>
 <style>
   :root{
     --primary:#002c63; --accent:#02b381; --paper:#fafaf7; --ink:#0f172a;
@@ -294,6 +295,43 @@
               <input id="setWa" type="tel" placeholder="521…" />
             </div>
           </div>
+
+          <div style="border-top:1px solid var(--s200);margin-top:1rem;padding-top:1rem">
+            <div class="toggle">
+              <div><strong style="font-size:.875rem">Google Calendar</strong><small>Crea el evento directo en tu Google al guardar</small></div>
+              <span id="gcalStatus" class="pill no">Sin conectar</span>
+            </div>
+            <div class="set-grid">
+              <div class="field" style="grid-column:1 / -1">
+                <label>Client ID de Google (OAuth)</label>
+                <input id="setGid" type="text" placeholder="xxxx.apps.googleusercontent.com" />
+              </div>
+            </div>
+            <div style="margin-top:.5rem;display:flex;gap:.5rem;flex-wrap:wrap">
+              <button class="btn" id="btnGconnect">Conectar Google</button>
+              <button class="btn ghost" id="btnGdisconnect">Desconectar</button>
+            </div>
+          </div>
+
+          <div style="border-top:1px solid var(--s200);margin-top:1rem;padding-top:1rem">
+            <div class="toggle">
+              <div><strong style="font-size:.875rem">WhatsApp automático</strong><small>Envía el recordatorio a tu WhatsApp a la hora exacta (requiere backend)</small></div>
+              <span id="waStatus" class="pill no">Apagado</span>
+            </div>
+            <div class="set-grid">
+              <div class="field">
+                <label>URL del backend</label>
+                <input id="setWaUrl" type="url" placeholder="https://tu-backend.onrender.com" />
+              </div>
+              <div class="field">
+                <label>API Key del backend</label>
+                <input id="setWaKey" type="password" placeholder="clave secreta" />
+              </div>
+            </div>
+            <div style="margin-top:.5rem">
+              <button class="btn" id="btnWaTest">Enviar WhatsApp de prueba</button>
+            </div>
+          </div>
         </div>
       </details>
 
@@ -313,16 +351,18 @@
 import {
   TIPOS, parseSpanish, crearItem, store, descargarICS, googleCalendarUrl,
   whatsappUrl, formatFechaHumana, hablar, pedirPermisoNotificaciones,
-  programarNotificaciones, dispararNotificacion
+  programarNotificaciones, dispararNotificacion, backendSync, backendDelete
 } from './memoria-core.js';
+import { initGoogle, googleConectado, conectarGoogle, desconectarGoogle, crearEventoGoogle } from './google-calendar.js';
 
 // ---------- ajustes ----------
 const SET_KEY = 'obc_mi_memoria_set_v1';
 const settings = Object.assign(
-  { lang: 'es-MX', defaultHour: 9, leadMin: 10, whatsapp: '' },
+  { lang: 'es-MX', defaultHour: 9, leadMin: 10, whatsapp: '', googleClientId: '', backendUrl: '', backendKey: '' },
   JSON.parse(localStorage.getItem(SET_KEY) || '{}')
 );
 const saveSettings = () => localStorage.setItem(SET_KEY, JSON.stringify(settings));
+initGoogle(settings.googleClientId);
 
 // ---------- helpers DOM ----------
 const $ = (id) => document.getElementById(id);
@@ -387,7 +427,20 @@ $('pGuardar').addEventListener('click', () => {
   render();
   toast('Guardado: ' + item.titulo);
   hablar('Listo. Te recordaré ' + item.titulo, settings.lang);
+  sincronizarExternos(item);
 });
+
+// Empuja el recordatorio a Google Calendar y/o al backend de WhatsApp si están configurados.
+async function sincronizarExternos(item) {
+  if (settings.googleClientId && googleConectado()) {
+    try { await crearEventoGoogle(item); toast('Agregado a Google Calendar'); }
+    catch (e) { toast('Google: ' + (e.message || 'error')); }
+  }
+  if (settings.backendUrl) {
+    try { await backendSync(settings.backendUrl, settings.backendKey, item, settings.whatsapp); toast('Programado en WhatsApp'); }
+    catch (e) { toast('WhatsApp backend: ' + (e.message || 'error')); }
+  }
+}
 
 function procesarTexto(texto) {
   if (!texto || !texto.trim()) return;
@@ -513,9 +566,13 @@ $('lista').addEventListener('click', (e) => {
     $('pFecha').value = toLocalInput(it.fechaISO);
     $('pRepetir').value = it.recurrencia ? it.recurrencia.freq : '';
     store.remove(id); render();
+    if (settings.backendUrl) backendDelete(settings.backendUrl, settings.backendKey, id).catch(() => {});
     $('preview').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
   }
-  else if (act === 'del') { store.remove(id); render(); toast('Borrado'); }
+  else if (act === 'del') {
+    store.remove(id); render(); toast('Borrado');
+    if (settings.backendUrl) backendDelete(settings.backendUrl, settings.backendKey, id).catch(() => {});
+  }
 });
 
 // ---------- ajustes UI ----------
@@ -527,6 +584,37 @@ $('setLang').addEventListener('change', (e) => { settings.lang = e.target.value;
 $('setHora').addEventListener('change', (e) => { settings.defaultHour = parseInt(e.target.value || '9', 10); saveSettings(); });
 $('setLead').addEventListener('change', (e) => { settings.leadMin = parseInt(e.target.value || '0', 10); saveSettings(); render(); });
 $('setWa').addEventListener('change', (e) => { settings.whatsapp = e.target.value.trim(); saveSettings(); });
+
+// --- Google Calendar ---
+$('setGid').value = settings.googleClientId;
+$('setWaUrl').value = settings.backendUrl;
+$('setWaKey').value = settings.backendKey;
+function pintarGcal() { $('gcalStatus').className = 'pill ' + (googleConectado() ? 'ok' : 'no'); $('gcalStatus').textContent = googleConectado() ? 'Conectado' : 'Sin conectar'; }
+function pintarWa() { const on = !!settings.backendUrl; $('waStatus').className = 'pill ' + (on ? 'ok' : 'no'); $('waStatus').textContent = on ? 'Activo' : 'Apagado'; }
+$('setGid').addEventListener('change', (e) => { settings.googleClientId = e.target.value.trim(); saveSettings(); initGoogle(settings.googleClientId); });
+$('btnGconnect').addEventListener('click', async () => {
+  if (!settings.googleClientId) { toast('Pega primero tu Client ID de Google'); return; }
+  try { await conectarGoogle(); toast('Google Calendar conectado'); } catch (e) { toast('Google: ' + (e.message || 'error')); }
+  pintarGcal();
+});
+$('btnGdisconnect').addEventListener('click', () => { desconectarGoogle(); pintarGcal(); toast('Google desconectado'); });
+pintarGcal();
+
+// --- WhatsApp backend ---
+$('setWaUrl').addEventListener('change', (e) => { settings.backendUrl = e.target.value.trim(); saveSettings(); pintarWa(); });
+$('setWaKey').addEventListener('change', (e) => { settings.backendKey = e.target.value.trim(); saveSettings(); });
+$('btnWaTest').addEventListener('click', async () => {
+  if (!settings.backendUrl) { toast('Configura la URL del backend'); return; }
+  if (!settings.whatsapp) { toast('Agrega tu número de WhatsApp arriba'); return; }
+  try {
+    const r = await fetch(settings.backendUrl.replace(/\/+$/, '') + '/api/test', {
+      method: 'POST', headers: { 'Content-Type': 'application/json', 'X-Api-Key': settings.backendKey || '' },
+      body: JSON.stringify({ to: settings.whatsapp.replace(/[^\d]/g, '') }),
+    });
+    toast(r.ok ? 'Mensaje de prueba enviado ✓' : 'Error backend ' + r.status);
+  } catch (e) { toast('No se pudo contactar el backend'); }
+});
+pintarWa();
 
 const btnNotif = $('btnNotif');
 function pintarNotif() {
