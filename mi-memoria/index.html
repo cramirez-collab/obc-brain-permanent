@@ -1,0 +1,553 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<title>Mi Memoria — Objetiva Brain</title>
+<meta name="description" content="Recuerda tareas, recordatorios y agenda por voz. Conecta con Google Calendar y WhatsApp." />
+<meta name="theme-color" content="#002c63" />
+<meta name="mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-title" content="Mi Memoria" />
+<link rel="manifest" href="./manifest.webmanifest" />
+<style>
+  :root{
+    --primary:#002c63; --accent:#02b381; --paper:#fafaf7; --ink:#0f172a;
+    --s50:#f8fafc; --s100:#f1f5f9; --s200:#e2e8f0; --s300:#cbd5e1;
+    --s400:#94a3b8; --s500:#64748b; --s600:#475569; --s700:#334155;
+    --amber:#d97706; --red:#dc2626; --green:#059669; --violet:#7c3aed;
+    --sans:"Inter",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+    --mono:"JetBrains Mono",ui-monospace,SFMono-Regular,Menlo,monospace;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0}
+  body{font-family:var(--sans);color:var(--ink);background:var(--s50);-webkit-font-smoothing:antialiased}
+  a{color:inherit;text-decoration:none}
+  button{font-family:inherit;cursor:pointer;border:none;background:none}
+  .app{display:flex;min-height:100vh}
+
+  /* sidebar */
+  .sidebar{width:18rem;flex-shrink:0;background:#fff;border-right:1px solid var(--s200);
+    display:flex;flex-direction:column;height:100vh;position:sticky;top:0}
+  .brand{display:flex;align-items:center;gap:.75rem;padding:1.25rem}
+  .brand .logo{width:2.25rem;height:2.25rem;border-radius:.5rem;background:var(--primary);
+    color:var(--accent);font-weight:700;font-size:.8rem;display:flex;align-items:center;justify-content:center}
+  .brand .t1{font-weight:600;font-size:.875rem;line-height:1.1}
+  .brand .t2{font-size:.6rem;letter-spacing:.12em;text-transform:uppercase;color:var(--s400)}
+  .nav{flex:1;overflow-y:auto;padding:.5rem .75rem}
+  .nav .grp{font-size:.6rem;letter-spacing:.12em;text-transform:uppercase;color:var(--s400);padding:.5rem .5rem;margin-top:.5rem}
+  .nav a{display:flex;align-items:center;gap:.75rem;padding:.55rem .6rem;border-radius:.5rem;
+    font-size:.875rem;color:var(--s700);transition:background .15s}
+  .nav a:hover{background:var(--s100)}
+  .nav a.active{background:var(--primary);color:#fff}
+  .nav a .dot{width:.4rem;height:.4rem;border-radius:50%;background:var(--accent);flex-shrink:0}
+  .sb-foot{padding:1rem;border-top:1px solid var(--s200);font-size:.7rem;color:var(--s400)}
+
+  /* topbar (móvil) */
+  .topbar{display:none;align-items:center;gap:.75rem;padding:.75rem 1rem;background:#fff;
+    border-bottom:1px solid var(--s200);position:sticky;top:0;z-index:30}
+  .topbar .logo{width:2rem;height:2rem;border-radius:.5rem;background:var(--primary);color:var(--accent);
+    font-weight:700;font-size:.7rem;display:flex;align-items:center;justify-content:center}
+  .hamb{width:2.25rem;height:2.25rem;border-radius:.5rem;display:flex;align-items:center;justify-content:center;color:var(--s600)}
+  .hamb:hover{background:var(--s100)}
+  .scrim{display:none;position:fixed;inset:0;background:rgba(15,23,42,.4);z-index:40}
+
+  .main{flex:1;min-width:0;display:flex;flex-direction:column}
+  .wrap{padding:2rem;max-width:60rem;margin:0 auto;width:100%}
+  header.page p.kicker{font-size:.7rem;letter-spacing:.14em;text-transform:uppercase;color:var(--accent);font-weight:600;margin:0 0 .25rem}
+  header.page h1{font-size:1.75rem;font-weight:600;margin:0;color:var(--ink)}
+  header.page .sub{font-size:.875rem;color:var(--s500);margin-top:.35rem}
+
+  .card{background:#fff;border:1px solid var(--s200);border-radius:.75rem}
+  .pad{padding:1.25rem}
+
+  /* captura por voz */
+  .capture{margin-top:1.5rem;text-align:center;padding:2rem 1.25rem}
+  .mic{width:5.5rem;height:5.5rem;border-radius:50%;background:var(--primary);color:#fff;
+    display:flex;align-items:center;justify-content:center;margin:0 auto;transition:transform .15s, background .2s;
+    box-shadow:0 8px 24px rgba(0,44,99,.25)}
+  .mic:hover{transform:scale(1.04)}
+  .mic.listening{background:var(--accent);animation:pulse 1.4s infinite}
+  .mic svg{width:2.25rem;height:2.25rem}
+  @keyframes pulse{0%{box-shadow:0 0 0 0 rgba(2,179,129,.5)}70%{box-shadow:0 0 0 22px rgba(2,179,129,0)}100%{box-shadow:0 0 0 0 rgba(2,179,129,0)}}
+  .cap-status{margin-top:1rem;font-size:.875rem;color:var(--s500);min-height:1.25rem}
+  .transcript{margin-top:.75rem;font-size:1.05rem;color:var(--ink);min-height:1.6rem;font-weight:500}
+  .transcript .interim{color:var(--s400)}
+  .hint{margin-top:1rem;font-size:.75rem;color:var(--s400)}
+  .manual{margin-top:1.25rem;display:flex;gap:.5rem;max-width:34rem;margin-left:auto;margin-right:auto}
+  .manual input{flex:1;padding:.6rem .8rem;border:1px solid var(--s300);border-radius:.6rem;font-size:.9rem}
+  .manual input:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px rgba(2,179,129,.15)}
+
+  .btn{display:inline-flex;align-items:center;gap:.4rem;padding:.55rem .9rem;border-radius:.6rem;
+    font-size:.85rem;font-weight:500;border:1px solid var(--s200);background:#fff;color:var(--s700);transition:.15s}
+  .btn:hover{background:var(--s100)}
+  .btn.primary{background:var(--primary);color:#fff;border-color:var(--primary)}
+  .btn.primary:hover{background:#013a82}
+  .btn.accent{background:var(--accent);color:#fff;border-color:var(--accent)}
+  .btn.ghost{border-color:transparent}
+  .btn svg{width:1rem;height:1rem}
+
+  /* preview de lo dictado */
+  .preview{margin-top:1.25rem;border:1px solid var(--accent);background:#f0fdf9}
+  .preview .row{display:flex;flex-wrap:wrap;gap:.75rem;margin-bottom:.85rem}
+  .field{display:flex;flex-direction:column;gap:.3rem;flex:1;min-width:9rem}
+  .field label{font-size:.65rem;text-transform:uppercase;letter-spacing:.08em;color:var(--s500);font-weight:600}
+  .field input,.field select{padding:.5rem .65rem;border:1px solid var(--s300);border-radius:.5rem;font-size:.9rem;background:#fff}
+  .field input:focus,.field select:focus{outline:none;border-color:var(--accent)}
+  .preview .acts{display:flex;gap:.5rem;flex-wrap:wrap;margin-top:.25rem}
+
+  /* stats */
+  .stats{display:grid;grid-template-columns:repeat(3,1fr);gap:.75rem;margin-top:1.5rem}
+  .stat{background:#fff;border:1px solid var(--s200);border-radius:.6rem;padding:.85rem 1rem}
+  .stat .n{font-size:1.5rem;font-weight:600}
+  .stat .l{font-size:.65rem;text-transform:uppercase;letter-spacing:.08em;color:var(--s400);font-weight:600;margin-top:.15rem}
+
+  /* lista */
+  .section-title{font-size:.7rem;text-transform:uppercase;letter-spacing:.1em;color:var(--s400);
+    font-weight:600;margin:1.5rem 0 .5rem}
+  .item{display:flex;align-items:flex-start;gap:.75rem;padding:.85rem 1rem;border:1px solid var(--s200);
+    border-radius:.6rem;background:#fff;margin-bottom:.5rem}
+  .item.done{opacity:.55}
+  .item.done .it-title{text-decoration:line-through}
+  .chk{width:1.3rem;height:1.3rem;border:2px solid var(--s300);border-radius:.4rem;flex-shrink:0;margin-top:.1rem;
+    display:flex;align-items:center;justify-content:center;color:#fff}
+  .chk.on{background:var(--accent);border-color:var(--accent)}
+  .chk svg{width:.85rem;height:.85rem}
+  .it-body{flex:1;min-width:0}
+  .it-title{font-size:.95rem;font-weight:500}
+  .it-meta{font-size:.78rem;color:var(--s500);margin-top:.15rem;display:flex;align-items:center;gap:.5rem;flex-wrap:wrap}
+  .badge{font-size:.62rem;text-transform:uppercase;letter-spacing:.05em;font-weight:600;padding:.1rem .4rem;border-radius:.3rem}
+  .badge.tarea{background:#eef2ff;color:var(--violet)}
+  .badge.recordatorio{background:#fef3c7;color:var(--amber)}
+  .badge.agenda{background:#ecfdf5;color:var(--green)}
+  .badge.venc{background:#fee2e2;color:var(--red)}
+  .badge.rep{background:var(--s100);color:var(--s600)}
+  .it-acts{display:flex;gap:.15rem;flex-shrink:0;flex-wrap:wrap;justify-content:flex-end}
+  .iconbtn{width:2rem;height:2rem;border-radius:.45rem;display:flex;align-items:center;justify-content:center;color:var(--s500)}
+  .iconbtn:hover{background:var(--s100);color:var(--primary)}
+  .iconbtn svg{width:1.05rem;height:1.05rem}
+  .empty{text-align:center;color:var(--s400);font-size:.875rem;padding:2.5rem 1rem}
+
+  /* settings */
+  details.settings{margin-top:1.5rem}
+  details.settings summary{cursor:pointer;font-size:.85rem;font-weight:600;color:var(--s600);
+    display:flex;align-items:center;gap:.5rem;padding:.5rem 0;list-style:none}
+  details.settings summary::-webkit-details-marker{display:none}
+  .set-grid{display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-top:.75rem}
+  .set-grid .field{min-width:0}
+  .toggle{display:flex;align-items:center;justify-content:space-between;gap:1rem;padding:.6rem 0}
+  .toggle small{color:var(--s400);font-size:.72rem;display:block;margin-top:.1rem}
+  .pill{font-size:.7rem;padding:.2rem .55rem;border-radius:1rem;font-weight:600}
+  .pill.ok{background:#ecfdf5;color:var(--green)}
+  .pill.no{background:#fef2f2;color:var(--red)}
+
+  footer.note{margin-top:2rem;font-size:.72rem;color:var(--s400);line-height:1.5}
+
+  .toast{position:fixed;left:50%;bottom:1.5rem;transform:translateX(-50%) translateY(1rem);
+    background:var(--ink);color:#fff;padding:.7rem 1.1rem;border-radius:.6rem;font-size:.85rem;
+    opacity:0;pointer-events:none;transition:.25s;z-index:60;max-width:90vw}
+  .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+
+  @media(max-width:860px){
+    .sidebar{position:fixed;left:0;top:0;z-index:50;transform:translateX(-100%);transition:transform .25s}
+    .sidebar.open{transform:translateX(0)}
+    .scrim.open{display:block}
+    .topbar{display:flex}
+    .wrap{padding:1.1rem}
+    header.page h1{font-size:1.4rem}
+    .stats{grid-template-columns:repeat(3,1fr);gap:.5rem}
+    .stat .n{font-size:1.2rem}
+    .set-grid{grid-template-columns:1fr}
+    .it-acts{order:3;width:100%;justify-content:flex-start;margin-top:.25rem}
+  }
+</style>
+</head>
+<body>
+<div class="app">
+  <!-- Sidebar -->
+  <aside class="sidebar" id="sidebar">
+    <div class="brand">
+      <div class="logo">OBC</div>
+      <div><div class="t1">Objetiva Brain</div><div class="t2">Construction</div></div>
+    </div>
+    <nav class="nav">
+      <div class="grp">Personal</div>
+      <a class="active" href="#"><span class="dot"></span>Mi Memoria</a>
+      <div class="grp">Cerebro</div>
+      <a href="../"><span class="dot" style="background:var(--s400)"></span>Inicio</a>
+      <a href="../tiempo/"><span class="dot" style="background:#0ea5e9"></span>Tiempo · Cronograma</a>
+    </nav>
+    <div class="sb-foot">Mi Memoria · v1<br>objetiva.app</div>
+  </aside>
+  <div class="scrim" id="scrim"></div>
+
+  <div class="main">
+    <!-- Topbar móvil -->
+    <div class="topbar">
+      <button class="hamb" id="hamb" aria-label="Menú">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="22" height="22"><path d="M3 6h18M3 12h18M3 18h18"/></svg>
+      </button>
+      <div class="logo">OBC</div>
+      <strong style="font-size:.9rem">Mi Memoria</strong>
+    </div>
+
+    <div class="wrap">
+      <header class="page">
+        <p class="kicker">Neurona · Personal</p>
+        <h1>Mi Memoria</h1>
+        <div class="sub">Dicta por voz lo que quieres recordar. Lo agendo, te aviso y lo envío a tu calendario o WhatsApp.</div>
+      </header>
+
+      <!-- Captura por voz -->
+      <section class="card capture">
+        <button class="mic" id="mic" aria-label="Hablar">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>
+        </button>
+        <div class="cap-status" id="capStatus">Toca el micrófono y di, por ejemplo: «recuérdame llamar al arquitecto mañana a las 10»</div>
+        <div class="transcript" id="transcript"></div>
+        <div class="hint">Ejemplos: «junta de obra el viernes a las 9», «pagar nómina cada quince días», «comprar material en 2 horas»</div>
+        <div class="manual">
+          <input id="manualInput" type="text" placeholder="…o escríbelo aquí" />
+          <button class="btn primary" id="manualBtn">Agregar</button>
+        </div>
+      </section>
+
+      <!-- Preview editable -->
+      <section class="card pad preview" id="preview" style="display:none">
+        <div class="row">
+          <div class="field" style="flex:2">
+            <label>Qué recordar</label>
+            <input id="pTitulo" type="text" />
+          </div>
+          <div class="field" style="max-width:11rem">
+            <label>Tipo</label>
+            <select id="pTipo">
+              <option value="recordatorio">Recordatorio</option>
+              <option value="tarea">Tarea</option>
+              <option value="agenda">Agenda / Evento</option>
+            </select>
+          </div>
+        </div>
+        <div class="row">
+          <div class="field">
+            <label>Fecha y hora</label>
+            <input id="pFecha" type="datetime-local" />
+          </div>
+          <div class="field" style="max-width:11rem">
+            <label>Repetir</label>
+            <select id="pRepetir">
+              <option value="">No repetir</option>
+              <option value="DAILY">Cada día</option>
+              <option value="WEEKLY">Cada semana</option>
+              <option value="MONTHLY">Cada mes</option>
+              <option value="YEARLY">Cada año</option>
+            </select>
+          </div>
+        </div>
+        <div class="acts">
+          <button class="btn accent" id="pGuardar">Guardar recordatorio</button>
+          <button class="btn ghost" id="pDescartar">Descartar</button>
+        </div>
+      </section>
+
+      <!-- Stats -->
+      <section class="stats">
+        <div class="stat"><div class="n" id="stHoy">0</div><div class="l">Hoy</div></div>
+        <div class="stat"><div class="n" id="stProx">0</div><div class="l">Próximos</div></div>
+        <div class="stat"><div class="n" id="stTotal">0</div><div class="l">Total activos</div></div>
+      </section>
+
+      <!-- Lista -->
+      <div id="lista"></div>
+
+      <!-- Ajustes -->
+      <details class="settings">
+        <summary>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+          Ajustes
+        </summary>
+        <div class="card pad" style="margin-top:.5rem">
+          <div class="toggle">
+            <div><strong style="font-size:.875rem">Notificaciones</strong><small>Avísame en este dispositivo cuando llegue la hora</small></div>
+            <button class="btn" id="btnNotif">Activar</button>
+          </div>
+          <div class="set-grid">
+            <div class="field">
+              <label>Idioma de voz</label>
+              <select id="setLang">
+                <option value="es-MX">Español (México)</option>
+                <option value="es-ES">Español (España)</option>
+                <option value="es-AR">Español (Argentina)</option>
+                <option value="es-CO">Español (Colombia)</option>
+              </select>
+            </div>
+            <div class="field">
+              <label>Hora por defecto</label>
+              <input id="setHora" type="number" min="0" max="23" value="9" />
+            </div>
+            <div class="field">
+              <label>Avisarme antes (min)</label>
+              <input id="setLead" type="number" min="0" max="1440" value="10" />
+            </div>
+            <div class="field">
+              <label>WhatsApp (con código país)</label>
+              <input id="setWa" type="tel" placeholder="521…" />
+            </div>
+          </div>
+        </div>
+      </details>
+
+      <footer class="note">
+        Los recordatorios se guardan en este dispositivo (almacenamiento local del navegador). Las notificaciones
+        llegan mientras la pestaña/PWA siga viva. Para recordatorios garantizados aunque cierres el navegador,
+        agrégalos a Google Calendar / tu calendario (.ics) o conecta el envío por WhatsApp con un backend
+        (ver guía de integración). Mi Memoria · Objetiva Brain Construction · objetiva.app
+      </footer>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script type="module">
+import {
+  TIPOS, parseSpanish, crearItem, store, descargarICS, googleCalendarUrl,
+  whatsappUrl, formatFechaHumana, hablar, pedirPermisoNotificaciones,
+  programarNotificaciones, dispararNotificacion
+} from './memoria-core.js';
+
+// ---------- ajustes ----------
+const SET_KEY = 'obc_mi_memoria_set_v1';
+const settings = Object.assign(
+  { lang: 'es-MX', defaultHour: 9, leadMin: 10, whatsapp: '' },
+  JSON.parse(localStorage.getItem(SET_KEY) || '{}')
+);
+const saveSettings = () => localStorage.setItem(SET_KEY, JSON.stringify(settings));
+
+// ---------- helpers DOM ----------
+const $ = (id) => document.getElementById(id);
+const ICON = {
+  check: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>',
+  gcal: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>',
+  ics: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>',
+  wa: '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M.057 24l1.687-6.163a11.867 11.867 0 0 1-1.587-5.946C.16 5.335 5.495 0 12.05 0a11.82 11.82 0 0 1 8.413 3.488 11.82 11.82 0 0 1 3.48 8.413c-.003 6.557-5.338 11.892-11.893 11.892a11.9 11.9 0 0 1-5.688-1.448L.057 24zm6.597-3.807c1.676.995 3.276 1.591 5.392 1.592 5.448 0 9.886-4.434 9.889-9.885.002-5.462-4.415-9.89-9.881-9.892-5.452 0-9.887 4.434-9.889 9.884a9.86 9.86 0 0 0 1.51 5.26l-.999 3.648 3.978-1.207zm11.387-5.464c-.074-.124-.272-.198-.57-.347-.297-.149-1.758-.868-2.031-.967-.272-.099-.47-.149-.669.149-.198.297-.768.967-.941 1.165-.173.198-.347.223-.644.074-.297-.149-1.255-.462-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.297-.347.446-.521.151-.172.2-.296.3-.495.099-.198.05-.372-.025-.521-.075-.148-.669-1.611-.916-2.206-.242-.579-.487-.501-.669-.51l-.57-.01c-.198 0-.52.074-.792.372s-1.04 1.016-1.04 2.479 1.065 2.876 1.213 3.074c.149.198 2.095 3.2 5.076 4.487.71.306 1.263.489 1.694.626.712.226 1.36.194 1.872.118.571-.085 1.758-.719 2.006-1.413.247-.694.247-1.289.173-1.413z"/></svg>',
+  speak: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14"/></svg>',
+  edit: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.12 2.12 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>',
+  del: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>',
+};
+let toastTimer;
+function toast(msg) {
+  const t = $('toast'); t.textContent = msg; t.classList.add('show');
+  clearTimeout(toastTimer); toastTimer = setTimeout(() => t.classList.remove('show'), 2600);
+}
+
+// ---------- navegación móvil ----------
+const sidebar = $('sidebar'), scrim = $('scrim');
+const toggleNav = (open) => { sidebar.classList.toggle('open', open); scrim.classList.toggle('open', open); };
+$('hamb').addEventListener('click', () => toggleNav(true));
+scrim.addEventListener('click', () => toggleNav(false));
+
+// ---------- preview de captura ----------
+let parsed = null;
+function mostrarPreview(p) {
+  parsed = p;
+  $('pTitulo').value = p.titulo;
+  $('pTipo').value = p.tipo;
+  $('pFecha').value = toLocalInput(p.fecha);
+  $('pRepetir').value = p.recurrencia ? p.recurrencia.freq : '';
+  $('preview').style.display = 'block';
+  $('preview').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+}
+function toLocalInput(date) {
+  const d = new Date(date);
+  return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' +
+    String(d.getDate()).padStart(2, '0') + 'T' + String(d.getHours()).padStart(2, '0') + ':' +
+    String(d.getMinutes()).padStart(2, '0');
+}
+function ocultarPreview() { $('preview').style.display = 'none'; parsed = null; $('transcript').textContent = ''; }
+
+$('pDescartar').addEventListener('click', ocultarPreview);
+$('pGuardar').addEventListener('click', () => {
+  const fechaLocal = new Date($('pFecha').value);
+  if (isNaN(fechaLocal)) { toast('Revisa la fecha'); return; }
+  const tipo = $('pTipo').value;
+  const freq = $('pRepetir').value;
+  const item = crearItem({
+    titulo: $('pTitulo').value.trim() || 'Recordatorio',
+    tipo,
+    fecha: fechaLocal,
+    tieneHora: true,
+    duracionMin: tipo === TIPOS.AGENDA ? 60 : 30,
+    recurrencia: freq ? { freq } : null,
+    alarmaMin: settings.leadMin,
+    raw: parsed ? parsed.raw : '',
+  });
+  store.save(item);
+  ocultarPreview();
+  render();
+  toast('Guardado: ' + item.titulo);
+  hablar('Listo. Te recordaré ' + item.titulo, settings.lang);
+});
+
+function procesarTexto(texto) {
+  if (!texto || !texto.trim()) return;
+  const p = parseSpanish(texto, { defaultHour: settings.defaultHour });
+  mostrarPreview(p);
+}
+
+// ---------- entrada manual ----------
+$('manualBtn').addEventListener('click', () => { procesarTexto($('manualInput').value); $('manualInput').value = ''; });
+$('manualInput').addEventListener('keydown', (e) => { if (e.key === 'Enter') $('manualBtn').click(); });
+
+// ---------- voz (SpeechRecognition) ----------
+const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+let recog = null, listening = false;
+const mic = $('mic');
+if (SR) {
+  recog = new SR();
+  recog.lang = settings.lang;
+  recog.interimResults = true;
+  recog.continuous = false;
+  recog.onstart = () => { listening = true; mic.classList.add('listening'); $('capStatus').textContent = 'Escuchando…'; $('transcript').textContent = ''; };
+  recog.onerror = (e) => { $('capStatus').textContent = e.error === 'not-allowed' ? 'Permiso de micrófono denegado.' : 'No te escuché, intenta de nuevo.'; };
+  recog.onend = () => { listening = false; mic.classList.remove('listening'); $('capStatus').textContent = 'Toca el micrófono para dictar otro recordatorio'; };
+  recog.onresult = (e) => {
+    let fin = '', interim = '';
+    for (let i = e.resultIndex; i < e.results.length; i++) {
+      const txt = e.results[i][0].transcript;
+      if (e.results[i].isFinal) fin += txt; else interim += txt;
+    }
+    $('transcript').innerHTML = (fin || '') + '<span class="interim">' + interim + '</span>';
+    if (fin) procesarTexto(fin);
+  };
+  mic.addEventListener('click', () => { if (listening) recog.stop(); else { recog.lang = settings.lang; try { recog.start(); } catch {} } });
+} else {
+  mic.addEventListener('click', () => { toast('Tu navegador no soporta dictado; usa el campo de texto'); $('manualInput').focus(); });
+  $('capStatus').textContent = 'Este navegador no soporta voz (usa Chrome o Safari). Puedes escribir abajo.';
+}
+
+// ---------- render de lista ----------
+function grupoDe(item, now) {
+  const f = new Date(item.fechaISO);
+  const d0 = new Date(now); d0.setHours(0, 0, 0, 0);
+  const fd = new Date(f); fd.setHours(0, 0, 0, 0);
+  const dif = Math.round((fd - d0) / 86400000);
+  if (item.recurrencia) return f < now && dif < 0 ? 'prox' : (dif <= 0 ? 'hoy' : (dif === 1 ? 'man' : 'prox'));
+  if (f < now) return 'venc';
+  if (dif === 0) return 'hoy';
+  if (dif === 1) return 'man';
+  return 'prox';
+}
+
+function itemHTML(it) {
+  const venc = !it.recurrencia && new Date(it.fechaISO) < new Date() && !it.hecho;
+  const repTxt = it.recurrencia ? ({ DAILY: 'cada día', WEEKLY: 'cada semana', MONTHLY: 'cada mes', YEARLY: 'cada año' }[it.recurrencia.freq] || 'repite') : '';
+  return `<div class="item ${it.hecho ? 'done' : ''}" data-id="${it.id}">
+    <button class="chk ${it.hecho ? 'on' : ''}" data-act="done" title="Marcar hecho">${it.hecho ? ICON.check : ''}</button>
+    <div class="it-body">
+      <div class="it-title">${esc(it.titulo)}</div>
+      <div class="it-meta">
+        <span class="badge ${it.tipo}">${it.tipo}</span>
+        <span>${formatFechaHumana(it.fechaISO, it.tieneHora)}</span>
+        ${venc ? '<span class="badge venc">vencido</span>' : ''}
+        ${repTxt ? `<span class="badge rep">${repTxt}</span>` : ''}
+      </div>
+    </div>
+    <div class="it-acts">
+      <button class="iconbtn" data-act="gcal" title="Agregar a Google Calendar">${ICON.gcal}</button>
+      <button class="iconbtn" data-act="ics" title="Descargar .ics (Apple/Outlook)">${ICON.ics}</button>
+      <button class="iconbtn" data-act="wa" title="Enviar por WhatsApp">${ICON.wa}</button>
+      <button class="iconbtn" data-act="speak" title="Leer en voz alta">${ICON.speak}</button>
+      <button class="iconbtn" data-act="edit" title="Editar">${ICON.edit}</button>
+      <button class="iconbtn" data-act="del" title="Borrar">${ICON.del}</button>
+    </div>
+  </div>`;
+}
+const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+
+function render() {
+  const items = store.all().sort((a, b) => new Date(a.fechaISO) - new Date(b.fechaISO));
+  const now = new Date();
+  const grupos = { venc: [], hoy: [], man: [], prox: [] };
+  items.forEach((it) => grupos[grupoDe(it, now)].push(it));
+
+  const activos = items.filter((i) => !i.hecho);
+  $('stHoy').textContent = grupos.hoy.filter((i) => !i.hecho).length;
+  $('stProx').textContent = (grupos.man.concat(grupos.prox)).filter((i) => !i.hecho).length;
+  $('stTotal').textContent = activos.length;
+
+  const titulos = { venc: 'Vencidos', hoy: 'Hoy', man: 'Mañana', prox: 'Próximos' };
+  let html = '';
+  for (const g of ['venc', 'hoy', 'man', 'prox']) {
+    if (!grupos[g].length) continue;
+    html += `<div class="section-title">${titulos[g]}</div>` + grupos[g].map(itemHTML).join('');
+  }
+  $('lista').innerHTML = html || '<div class="empty">Aún no tienes recordatorios. Toca el micrófono y dime qué quieres recordar 🎙️</div>';
+
+  programarNotificaciones(store.all(), {
+    leadMin: settings.leadMin, lang: settings.lang,
+    onFire: (it) => { store.update(it.id, { notificado: true }); render(); },
+  });
+}
+
+// ---------- acciones de lista (delegación) ----------
+$('lista').addEventListener('click', (e) => {
+  const btn = e.target.closest('[data-act]');
+  if (!btn) return;
+  const id = btn.closest('.item').dataset.id;
+  const it = store.all().find((x) => x.id === id);
+  if (!it) return;
+  const act = btn.dataset.act;
+  if (act === 'done') { store.update(id, { hecho: !it.hecho }); render(); }
+  else if (act === 'gcal') { window.open(googleCalendarUrl(it), '_blank'); }
+  else if (act === 'ics') { descargarICS(it); toast('Archivo .ics descargado'); }
+  else if (act === 'wa') {
+    if (!settings.whatsapp) { toast('Agrega tu número de WhatsApp en Ajustes'); return; }
+    window.open(whatsappUrl(it, settings.whatsapp), '_blank');
+  }
+  else if (act === 'speak') { hablar(it.titulo + '. ' + formatFechaHumana(it.fechaISO, it.tieneHora), settings.lang); }
+  else if (act === 'edit') {
+    procesarTexto(it.titulo);
+    $('pTitulo').value = it.titulo;
+    $('pTipo').value = it.tipo;
+    $('pFecha').value = toLocalInput(it.fechaISO);
+    $('pRepetir').value = it.recurrencia ? it.recurrencia.freq : '';
+    store.remove(id); render();
+    $('preview').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  }
+  else if (act === 'del') { store.remove(id); render(); toast('Borrado'); }
+});
+
+// ---------- ajustes UI ----------
+$('setLang').value = settings.lang;
+$('setHora').value = settings.defaultHour;
+$('setLead').value = settings.leadMin;
+$('setWa').value = settings.whatsapp;
+$('setLang').addEventListener('change', (e) => { settings.lang = e.target.value; if (recog) recog.lang = settings.lang; saveSettings(); });
+$('setHora').addEventListener('change', (e) => { settings.defaultHour = parseInt(e.target.value || '9', 10); saveSettings(); });
+$('setLead').addEventListener('change', (e) => { settings.leadMin = parseInt(e.target.value || '0', 10); saveSettings(); render(); });
+$('setWa').addEventListener('change', (e) => { settings.whatsapp = e.target.value.trim(); saveSettings(); });
+
+const btnNotif = $('btnNotif');
+function pintarNotif() {
+  if (!('Notification' in window)) { btnNotif.outerHTML = '<span class="pill no">No soportado</span>'; return; }
+  if (Notification.permission === 'granted') { btnNotif.outerHTML = '<span class="pill ok">Activadas</span>'; }
+  else if (Notification.permission === 'denied') { btnNotif.textContent = 'Bloqueadas (revisa el navegador)'; }
+}
+btnNotif.addEventListener('click', async () => {
+  const r = await pedirPermisoNotificaciones();
+  if (r === 'granted') { dispararNotificacion({ titulo: 'Notificaciones activadas ✓', fechaISO: new Date().toISOString(), tieneHora: true }, settings.lang); }
+  pintarNotif();
+});
+pintarNotif();
+
+// ---------- service worker (offline / instalable) ----------
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('./sw.js').catch(() => {});
+}
+
+// ---------- inicio ----------
+render();
+</script>
+</body>
+</html>
